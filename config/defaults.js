@@ -9,7 +9,7 @@
 /**
 	@type {Object}
 */
-export const zone = "Australia/Melbourne";
+export const defaultConfig = "America/Los_Angeles";
 export const format = "ddd h:mm A";
 export const zones = {
 	'brazil': 'America/Araguaina',
