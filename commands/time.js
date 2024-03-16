@@ -1,21 +1,11 @@
-/**
-	@module commands/time
-	@desc This is the core command of the bot, controlling the configuration for the nickname.
-	@author WizardCM <bots@wizardcm.com>
-**/
-
-/**
-	@type Array
-	@desc Primary command triggers
-**/
-module.exports.triggers = ['time']
+export const triggers = ['time']
 
 /**
 	@desc The function that's triggered by the onMessage event
 	@type function
 	@param msg {Object} Message object from Discord.js
 **/
-module.exports.run = function (msg) {
+export default function run (msg) {
 	let parentModule = this;
 	let command = msg.content.replace(/( {2,})/g, ' ').split(' ');
 	let hasPerms = new Discord.Permissions(msg.member.permissions.bitfield);

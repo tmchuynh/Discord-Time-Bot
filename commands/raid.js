@@ -1,25 +1,17 @@
-/**
-	@module commands/raid
-	@desc A simple raid scheduler/manager, originally developed for a friend. A secondary command available for those who want it.
-	@author WizardCM <bots@wizardcm.com>
-**/
+// raid.js
 
 /**
-	@type Array
-	@desc Primary command triggers
-**/
-module.exports.triggers = ['raid', 'join', 'leave']
+ * @desc The function that's triggered by the onMessage event
+ * @param {Object} msg Message object from Discord.js
+ */
+export default function run(msg) {
+	const { Permissions, RichEmbed } = require('discord.js');
+	const storage = require('node-persist');
 
-/**
-	@desc The function that's triggered by the onMessage event
-	@type function
-	@param msg {Object} Message object from Discord.js
-**/
-module.exports.run = function (msg) {
 	// if (msg.content.indexOf("!raid") == 0 || msg.content.indexOf("!join") == 0 || msg.content.indexOf("!leave") == 0)
 	let parentModule = this;
 	let command = msg.content.split(' ');
-	let hasPerms = new Discord.Permissions(msg.member.permissions.bitfield);
+	let hasPerms = new Permissions(msg.member.permissions.bitfield);
 	hasPerms = hasPerms.has('ADMINISTRATOR') || hasPerms.has('MANAGE_GUILD');
 	let rsvpTitle = "Ready Check by WizardCM";
 	let senderUserTag = msg.member.user.username + "#" + msg.member.user.discriminator + "%%%%%%" + msg.member.user.id;
@@ -34,9 +26,9 @@ module.exports.run = function (msg) {
 	} catch (error) {
 		console.log("Failed to load data for " + msg.guild.name + ": " + error);
 	}
-	let joinRaid = function() {
+	let joinRaid = function () {
 		if (Object.keys(raidDetails).length && raidDetails.raiders.indexOf(senderUserTag) === -1) { // Not raider
-			if(raidDetails.raiders.length) {
+			if (raidDetails.raiders.length) {
 				let raiders = raidDetails.raiders.split(",");
 				raiders.push(senderUserTag);
 				raidDetails.raiders = raiders.join(',');
@@ -51,7 +43,7 @@ module.exports.run = function (msg) {
 			msg.channel.send("There is currently no raid scheduled.");
 		}
 	};
-	let leaveRaid = function() {
+	let leaveRaid = function () {
 		if (Object.keys(raidDetails).length && raidDetails.raiders.indexOf(senderUserTag) !== -1) { // Is a raider
 			let raiders = raidDetails.raiders.split(",");
 			let index = raiders.indexOf(senderUserTag);
@@ -75,7 +67,7 @@ module.exports.run = function (msg) {
 		}
 	}
 	if (command.length == 1) {
-		switch(command[0]) {
+		switch (command[0]) {
 			case botConfig.prefix + 'raid':
 				let raidSummary = "None scheduled.";
 				if (Object.keys(raidDetails).length) {
@@ -85,33 +77,33 @@ module.exports.run = function (msg) {
 					} else if (raidDetails.raiders.indexOf(",") !== -1) {
 						raiderCount = raidDetails.raiders.split(',').length;
 					}
-					raidSummary = "__**" + raidDetails.description + "**__" + "\n\n" + 
-								  raiderCount + " " + (raiderCount !== 1 ? "raiders have" : "raider has") + " signed up." + "\n\n" +
-								  msg.member.displayName + ", you are __" + (raidDetails.raiders.indexOf(senderUserTag) !== -1 ? "already" : "not yet") + " in__ this raid." + "\n\n" +
-								  "_" + "Organized by " + raidDetails.createdBy.split("#")[0] + "_" + 
-								  (hasPerms && raidDetails.modifiedBy.trim().length ? "\n_Last modified by " + raidDetails.modifiedBy.split("#")[0] + "_" : "");
+					raidSummary = "__**" + raidDetails.description + "**__" + "\n\n" +
+						raiderCount + " " + (raiderCount !== 1 ? "raiders have" : "raider has") + " signed up." + "\n\n" +
+						msg.member.displayName + ", you are __" + (raidDetails.raiders.indexOf(senderUserTag) !== -1 ? "already" : "not yet") + " in__ this raid." + "\n\n" +
+						"_" + "Organized by " + raidDetails.createdBy.split("#")[0] + "_" +
+						(hasPerms && raidDetails.modifiedBy.trim().length ? "\n_Last modified by " + raidDetails.modifiedBy.split("#")[0] + "_" : "");
 				}
-				msg.channel.send(new Discord.RichEmbed({
+				msg.channel.send(new RichEmbed({
 					color: colorConfig.neutral,
 					title: rsvpTitle,
 					url: '',
 					description: 'Ready check!',
 					fields: [
-					{
-						name: 'Commands',
-						value: '`!raid` Show this help menu' + '\n' +
-							'`!join` Mark yourself as Available for the raid' + '\n' + // Hide if the user has already joined
-							'`!leave` Remove your Available status' + '\n' +
-							(hasPerms ? '`!raid new [description]` Prepare for a new raid - description can be any length, and should contain time/date' + '\n' : '') +
-							(hasPerms ? '`!raid update [description]` Modify the name of the current raid without removing raiders' + '\n' : '') +
-							(hasPerms ? '`!raid list` List users that have `!join`ed (without pinging them)' + '\n' : '') +
-							(hasPerms ? '`!raid notify` Ping all users that have `join`ed' + '\n' : '') +
-							(hasPerms ? '`!raid clear [notify]` Remove the latest raid and all that have `join`ed - add `yes` on the end to notify them' : '')
-					},
-					{
-						name: 'Upcoming Raid Details',
-						value: raidSummary // TODO, display description, who created it (and when?) and how many people have joined (and if the current user has joined)
-					}
+						{
+							name: 'Commands',
+							value: '`!raid` Show this help menu' + '\n' +
+								'`!join` Mark yourself as Available for the raid' + '\n' + // Hide if the user has already joined
+								'`!leave` Remove your Available status' + '\n' +
+								(hasPerms ? '`!raid new [description]` Prepare for a new raid - description can be any length, and should contain time/date' + '\n' : '') +
+								(hasPerms ? '`!raid update [description]` Modify the name of the current raid without removing raiders' + '\n' : '') +
+								(hasPerms ? '`!raid list` List users that have `!join`ed (without pinging them)' + '\n' : '') +
+								(hasPerms ? '`!raid notify` Ping all users that have `join`ed' + '\n' : '') +
+								(hasPerms ? '`!raid clear [notify]` Remove the latest raid and all that have `join`ed - add `yes` on the end to notify them' : '')
+						},
+						{
+							name: 'Upcoming Raid Details',
+							value: raidSummary // TODO, display description, who created it (and when?) and how many people have joined (and if the current user has joined)
+						}
 					]
 				}));
 				break;
@@ -123,7 +115,7 @@ module.exports.run = function (msg) {
 				break;
 		}
 	} else {
-		switch(command[1]) {
+		switch (command[1]) {
 			case 'join':
 				joinRaid();
 				return true;
@@ -134,7 +126,7 @@ module.exports.run = function (msg) {
 				break;
 		}
 		if (hasPerms) {
-			switch(command[1]) {
+			switch (command[1]) {
 				case 'new':
 				case 'create':
 				case 'set':
@@ -166,7 +158,7 @@ module.exports.run = function (msg) {
 					if (Object.keys(raidDetails).length && command.length > 2) {
 						// Renaming
 						let desc = command.join(' ').replace('!raid ' + command[1], '').trim();
-						if(desc.length) {
+						if (desc.length) {
 							raidDetails.description = desc;
 							raidDetails.modifiedBy = senderUserTag;
 							storage.setItemSync(raidName, raidDetails);
@@ -180,16 +172,16 @@ module.exports.run = function (msg) {
 						// No event to rename
 						msg.channel.send("Sorry, but there's currently no raid scheduled. You can create one using `!raid new [description]`.");
 					}
-					
+
 					break;
 				case 'list':
 					if (Object.keys(raidDetails).length && raidDetails.raiders.length) {
 						let raiders = raidDetails.raiders.split(',');
 						let raiderList = "";
-						raiders.forEach(function(raider) {
+						raiders.forEach(function (raider) {
 							raiderList += raider.split("%%%%%%")[0] + ", ";
 						});
-						msg.channel.send("Currently there " + (raiderCount === 1 ? "is":"are") + " " + raidDetails.raiders.split(',').length + " raider" + (raiderCount === 1 ? "":"s") + ", listed below.\n\n" + raiderList);
+						msg.channel.send("Currently there " + (raiderCount === 1 ? "is" : "are") + " " + raidDetails.raiders.split(',').length + " raider" + (raiderCount === 1 ? "" : "s") + ", listed below.\n\n" + raiderList);
 					} else if (Object.keys(raidDetails).length) {
 						msg.channel.send("No raiders have joined yet.");
 					} else {
@@ -204,17 +196,17 @@ module.exports.run = function (msg) {
 						let raiders = raidDetails.raiders.split(',');
 						raiderCount = 0;
 						let mentions = "";
-						msg.channel.members.some(function(data) {
+						msg.channel.members.some(function (data) {
 							if (raidDetails.raiders.indexOf(data.user.id) !== -1) {
 								mentions += data.user + ' ';
 								raiderCount++;
 							}
-							if(raiders.length == raiderCount) {
+							if (raiders.length == raiderCount) {
 								return true;
 							}
 						});
 						msg.channel.send(mentions + "\n\n" +
-												"**" + msg.member.displayName + "** would like to remind you about **" + raidDetails.description + "**.");
+							"**" + msg.member.displayName + "** would like to remind you about **" + raidDetails.description + "**.");
 					} else if (Object.keys(raidDetails).length) {
 						msg.channel.send("No raiders have joined yet.");
 					} else {
@@ -230,17 +222,17 @@ module.exports.run = function (msg) {
 						let raiders = raidDetails.raiders.split(',');
 						raiderCount = 0;
 						let mentions = "";
-						msg.channel.members.some(function(data) {
+						msg.channel.members.some(function (data) {
 							if (raidDetails.raiders.indexOf(data.user.id) !== -1) {
 								mentions += data.user + ' ';
 								raiderCount++;
 							}
-							if(raiders.length == raiderCount) {
+							if (raiders.length == raiderCount) {
 								return true;
 							}
 						});
 						msg.channel.send(mentions + "\n\n" +
-												"**" + msg.member.displayName + "** has deleted the raid you signed up for.");
+							"**" + msg.member.displayName + "** has deleted the raid you signed up for.");
 					}
 					raidDetails = {};
 					storage.setItemSync(raidName, raidDetails);

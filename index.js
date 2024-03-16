@@ -21,7 +21,11 @@ const bot = new Client({ intents: botIntents });
 import fs from 'fs';
 import moment from 'moment';
 import timezone from 'moment-timezone';
-import { initSync, getItemSync } from 'node-persist'; // Docs: https://github.com/simonlast/node-persist
+
+
+import storage from 'node-persist';
+const { initSync, getItemSync } = storage;
+
 import { scheduleJob } from 'node-schedule';
 
 /* Configuration */
