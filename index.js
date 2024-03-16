@@ -9,7 +9,8 @@
 const { Client, Intents, DiscordAPIError } = require('discord.js');
 const botIntents = new Intents([
 	Intents.FLAGS.GUILDS,
-	Intents.FLAGS.GUILD_MESSAGES
+	Intents.FLAGS.GUILD_MESSAGES,
+	Intents.FLAGS.GUILD_MESSAGE_REACTIONS
 	// Add more intents if needed
 ]);
 const bot = new Client({ intents: botIntents });
