@@ -6,25 +6,29 @@
 **/
 
 /* System */
-global.Discord        = require('discord.js');
-global.bot            = new Discord.Client();
+const { Client, Intents, DiscordAPIError } = require('discord.js');
+const botIntents = new Intents([
+	Intents.FLAGS.GUILDS,
+	Intents.FLAGS.GUILD_MESSAGES
+	// Add more intents if needed
+]);
+const bot = new Client({ intents: botIntents });
 
 /* Dependencies */
-global.fs             = require('fs');
-global.moment         = require('moment');
-global.timezone       = require('moment-timezone');
-global.storage        = require('node-persist'); // Docs: https://github.com/simonlast/node-persist
-global.schedule       = require('node-schedule');
-
+const fs = require('fs');
+const moment = require('moment');
+const timezone = require('moment-timezone');
+const storage = require('node-persist'); // Docs: https://github.com/simonlast/node-persist
+const schedule = require('node-schedule');
 
 /* Configuration */
-global.botConfig      = require('./config/bot.js');
-global.colorConfig    = require('./config/colors.js');
-global.defaultConfig  = require('./config/defaults.js');
+const botConfig = require('./config/bot.js');
+const colorConfig = require('./config/colors.js');
+const defaultConfig = require('./config/defaults.js');
 
 /* Commands */
-global.timeCommand    = require('./commands/time.js');
-global.raidCommand    = require('./commands/raid.js');
+const timeCommand = require('./commands/time.js');
+const raidCommand = require('./commands/raid.js');
 // TODO loop through the commands dir and automatically add them
 
 storage.initSync();
@@ -83,14 +87,14 @@ bot.on('message', handleMessage);
  */
 function handleLogin() {
 	console.log('Discord Time Bot is now online!');
-	bot.user.setGame('with ' + botConfig.prefix + 'time');
+	bot.user.setActivity('with ' + botConfig.prefix + 'time');
 	/**
 	 * @desc Time function that updates the bot's nickname in every server
 	 * @function
 	 */
 	function setTime() {
-		bot.guilds.forEach(function (guild) {
-			guild.fetchMember(bot.user).then(function (member) {
+		bot.guilds.cache.forEach(function (guild) {
+			guild.members.fetch(bot.user).then(function (member) {
 				if (member.id == bot.user.id) {
 					let data = storage.getItemSync(guild.id);
 					let thisServer = {};
@@ -131,12 +135,15 @@ bot.login(botConfig.token);
 bot.on('ready', handleLogin);
 bot.on('resume', handleLogin);
 bot.on('reconnecting', handleDisconnect);
-bot.on('error', handleDisconnect);
+bot.on('error', function (error) {
+	if (error instanceof DiscordAPIError && error.message === 'getaddrinfo ENOTFOUND discordapp.com discordapp.com:443') {
+		console.error('Discord API unreachable.');
+		return;
+	}
+	handleDisconnect();
+});
 bot.on('disconnect', function (event) {
 	console.warn("Disconnected as Discord's servers are unreachable.");
 	handleDisconnect();
 });
-// TODO (node:23452) UnhandledPromiseRejectionWarning: Unhandled promise rejection (rejection id: 11): Error: getaddrinfo ENOENT discordapp.com:443
-
-// TODO (node:13582) UnhandledPromiseRejectionWarning: Unhandled promise rejection (rejection id: 4156): TypeError: Cannot read property 'options' of undefined
 process.on("unhandledRejection", console.error);
