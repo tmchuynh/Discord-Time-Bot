@@ -20,6 +20,7 @@
   },
   "repository": "/discord-time-bot",
   "private": true,
+  "type": "module",
   "dependencies": {
     "discord.js": "^14.12.1",
     "moment-timezone": "^0.5.45",

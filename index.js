@@ -6,7 +6,9 @@
 **/
 
 /* System */
-const { Client, Intents, DiscordAPIError } = require('discord.js');
+import Discord from 'discord.js';
+
+const { Client, Intents, DiscordAPIError } = Discord;
 const botIntents = new Intents([
 	Intents.FLAGS.GUILDS,
 	Intents.FLAGS.GUILD_MESSAGES,
@@ -16,23 +18,23 @@ const botIntents = new Intents([
 const bot = new Client({ intents: botIntents });
 
 /* Dependencies */
-const fs = require('fs');
-const moment = require('moment');
-const timezone = require('moment-timezone');
-const storage = require('node-persist'); // Docs: https://github.com/simonlast/node-persist
-const schedule = require('node-schedule');
+import fs from 'fs';
+import moment from 'moment';
+import timezone from 'moment-timezone';
+import { initSync, getItemSync } from 'node-persist'; // Docs: https://github.com/simonlast/node-persist
+import { scheduleJob } from 'node-schedule';
 
 /* Configuration */
-const botConfig = require('./config/bot.js');
-const colorConfig = require('./config/colors.js');
-const defaultConfig = require('./config/defaults.js');
+import { title as _title, prefix, token } from './config/bot.js';
+import { bad } from './config/colors.js';
+import defaultConfig from './config/defaults.js';
 
 /* Commands */
-const timeCommand = require('./commands/time.js');
-const raidCommand = require('./commands/raid.js');
+import { triggers, run } from './commands/time.js';
+import raidCommand from './commands/raid.js';
 // TODO loop through the commands dir and automatically add them
 
-storage.initSync();
+initSync();
 let scheduledJob = {};
 
 /**
@@ -62,8 +64,8 @@ function handleMessage(msg) {
 		}
 
 		msg.channel.send(new Discord.RichEmbed({
-			color: colorConfig.bad,
-			title: botConfig.title,
+			color: bad,
+			title: _title,
 			description: ' ',
 			url: '',
 			fields: [{
@@ -72,10 +74,10 @@ function handleMessage(msg) {
 			}]
 		}));
 	};
-	if (msg.content.indexOf(botConfig.prefix + timeCommand.triggers[0]) == 0) {
+	if (msg.content.indexOf(prefix + triggers[0]) == 0) {
 		// TODO Expanding on proper command import, also overhaul this
-		timeCommand.run(msg);
-	} else if (msg.content.indexOf(botConfig.prefix + "raid") == 0 || msg.content.indexOf(botConfig.prefix + "join") == 0 || msg.content.indexOf(botConfig.prefix + "leave") == 0) {
+		run(msg);
+	} else if (msg.content.indexOf(prefix + "raid") == 0 || msg.content.indexOf(prefix + "join") == 0 || msg.content.indexOf(prefix + "leave") == 0) {
 		//raidCommand.run(msg);
 	}
 }
@@ -88,7 +90,7 @@ bot.on('message', handleMessage);
  */
 function handleLogin() {
 	console.log('Discord Time Bot is now online!');
-	bot.user.setActivity('with ' + botConfig.prefix + 'time');
+	bot.user.setActivity('with ' + prefix + 'time');
 	/**
 	 * @desc Time function that updates the bot's nickname in every server
 	 * @function
@@ -97,7 +99,7 @@ function handleLogin() {
 		bot.guilds.cache.forEach(function (guild) {
 			guild.members.fetch(bot.user).then(function (member) {
 				if (member.id == bot.user.id) {
-					let data = storage.getItemSync(guild.id);
+					let data = getItemSync(guild.id);
 					let thisServer = {};
 					try {
 						if (data) {
@@ -120,7 +122,7 @@ function handleLogin() {
 		});
 	}
 	setTime();
-	scheduledJob = schedule.scheduleJob('0 * * * * *', setTime);
+	scheduledJob = scheduleJob('0 * * * * *', setTime);
 }
 function handleDisconnect() {
 	if (scheduledJob) {
@@ -132,7 +134,7 @@ function handleDisconnect() {
  * @desc Attempt to log into Discord's servers. Handle as many errors as we can instead of crashing.
  * @function
  */
-bot.login(botConfig.token);
+bot.login(token);
 bot.on('ready', handleLogin);
 bot.on('resume', handleLogin);
 bot.on('reconnecting', handleDisconnect);
